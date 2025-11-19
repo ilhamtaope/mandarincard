@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Mandarin Flashcard</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <h1>Mandarin Flashcard</h1>
+
+    <!-- MENU -->
+    <div id="menu"></div>
+
+    <!-- HALAMAN FLASHCARD -->
+    <div id="flashcardPage" style="display: none">
+      <h2 id="fcTitle"></h2>
+
+      <div class="card" id="cardBox">
+        <div id="questionText">Tap here</div>
+      </div>
+
+      <div class="result-area">
+        <h3>Result</h3>
+        <div class="card" id="resultBox"></div>
+      </div>
+
+      <!-- TOMBOL NAVIGASI -->
+      <div class="btn-area">
+        <button id="prevBtn">Previous</button>
+        <button id="randomBtn">Random</button>
+        <button id="nextBtn">Next</button>
+      </div>
+
+      <!-- TOMBOL KNOW -->
+      <div class="btn-know" id="knowBtn">Know</div>
+    </div>
+
+    <script>
+      // ==========================
+      // MENU 1–12
+      // ==========================
+      function loadMenu() {
+        const menu = document.getElementById("menu");
+        menu.innerHTML = "";
+
+        for (let i = 1; i <= 12; i++) {
+          menu.innerHTML += `
+            <div class="btn-flash" onclick="openFlashcard(${i})">
+              Flashcard ${i}
+            </div>
+          `;
+        }
+      }
+
+      // ==========================
+      // LOAD DATA DINAMIS
+      // ==========================
+      function loadFlashcardData(id) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = `data/fc${id}.js`;
+
+          script.onload = () => resolve(window["flashcard" + id]);
+          script.onerror = reject;
+
+          document.body.appendChild(script);
+        });
+      }
+
+      let words = []; // Array kata
+      let currentIndex = 0;
+
+      // ==========================
+      // BUKA FLASHCARD
+      // ==========================
+      async function openFlashcard(id) {
+        document.getElementById("menu").style.display = "none";
+        document.getElementById("flashcardPage").style.display = "block";
+
+        document.getElementById("fcTitle").textContent = "Flashcard " + id;
+
+        words = await loadFlashcardData(id); // LOAD DATA
+        currentIndex = 0;
+
+        loadCard();
+      }
+
+      // ==========================
+      // TAMPILKAN KARTU
+      // ==========================
+      function loadCard() {
+        const w = words[currentIndex];
+        document.getElementById("questionText").textContent = w.indo;
+        document.getElementById("resultBox").textContent = ""; // reset result
+      }
+
+      // Tampilkan arti (tap)
+      document.getElementById("cardBox").onclick = function () {
+        const w = words[currentIndex];
+        document.getElementById(
+          "resultBox"
+        ).textContent = `${w.hanzi} (${w.pinyin})`;
+      };
+
+      // ==========================
+      // TOMBOL NEXT
+      // ==========================
+      document.getElementById("nextBtn").onclick = function () {
+        currentIndex++;
+        if (currentIndex >= words.length) currentIndex = 0;
+        loadCard();
+      };
+
+      // ==========================
+      // TOMBOL PREVIOUS
+      // ==========================
+      document.getElementById("prevBtn").onclick = function () {
+        currentIndex--;
+        if (currentIndex < 0) currentIndex = words.length - 1;
+        loadCard();
+      };
+
+      // ==========================
+      // TOMBOL RANDOM
+      // ==========================
+      document.getElementById("randomBtn").onclick = function () {
+        currentIndex = Math.floor(Math.random() * words.length);
+        loadCard();
+      };
+
+      // ==========================
+      // TOMBOL KNOW (hapus kata)
+      // ==========================
+      document.getElementById("knowBtn").onclick = function () {
+        words.splice(currentIndex, 1); // hapus
+
+        if (words.length === 0) {
+          alert("Semua kata sudah dikuasai!");
+          location.reload();
+          return;
+        }
+
+        if (currentIndex >= words.length) currentIndex = 0;
+        loadCard();
+      };
+
+      // LOAD MENU PERTAMA
+      loadMenu();
+    </script>
+  </body>
+</html>
